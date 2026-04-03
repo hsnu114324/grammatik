@@ -1094,6 +1094,9 @@ function submitAnswer(displayIdx) {
     `;
 
     setTimeout(() => { card.className = 'card'; }, 1500);
+
+    input.value = '';
+    document.querySelectorAll(`#chips-${displayIdx} .chip.used`).forEach(c => c.classList.remove('used'));
   }
 
   updateScore();
