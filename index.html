@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>德文句子練習</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      color: #e0e0e0;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: .4rem;
+    }
+
+    header p {
+      font-size: .95rem;
+      color: #aaa;
+    }
+
+    .score-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      font-size: .9rem;
+    }
+
+    .score-bar span {
+      background: rgba(255,255,255,.07);
+      padding: .45rem 1.2rem;
+      border-radius: 999px;
+    }
+
+    .score-bar .correct-count { color: #4ade80; }
+    .score-bar .wrong-count { color: #f87171; }
+    .score-bar .total-count { color: #93c5fd; }
+
+    .card {
+      background: rgba(255, 255, 255, .06);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      transition: border-color .3s, box-shadow .3s;
+    }
+
+    .card.correct {
+      border-color: #4ade80;
+      box-shadow: 0 0 20px rgba(74, 222, 128, .15);
+    }
+
+    .card.wrong {
+      border-color: #f87171;
+      box-shadow: 0 0 20px rgba(248, 113, 113, .12);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-number {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #1a1a2e;
+      font-weight: 700;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .85rem;
+      flex-shrink: 0;
+    }
+
+    .card-label {
+      font-size: .8rem;
+      color: #999;
+      letter-spacing: .5px;
+    }
+
+    .verb-hint {
+      display: inline-block;
+      background: rgba(196, 181, 253, .15);
+      color: #c4b5fd;
+      padding: .15rem .55rem;
+      border-radius: 6px;
+      font-size: .8rem;
+      margin-left: .5rem;
+      letter-spacing: 0;
+      font-style: italic;
+    }
+
+    .word-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .chip {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15);
+      padding: .35rem .75rem;
+      border-radius: 8px;
+      font-size: .95rem;
+      color: #e0e0e0;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+      user-select: none;
+    }
+
+    .chip:hover {
+      background: rgba(255,255,255,.18);
+      transform: translateY(-1px);
+    }
+
+    .chip.used {
+      opacity: .35;
+      pointer-events: none;
+    }
+
+    .input-row {
+      display: flex;
+      gap: .6rem;
+      align-items: stretch;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: rgba(0,0,0,.3);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 10px;
+      padding: .65rem 1rem;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .3s;
+    }
+
+    .input-row input:focus {
+      border-color: #ffd200;
+    }
+
+    .input-row input:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #1a1a2e;
+      border: none;
+      border-radius: 10px;
+      padding: .65rem 1.3rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+      white-space: nowrap;
+    }
+
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .feedback {
+      margin-top: .85rem;
+      padding: .7rem 1rem;
+      border-radius: 10px;
+      font-size: .9rem;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .feedback.show { display: block; }
+
+    .feedback.success {
+      background: rgba(74, 222, 128, .12);
+      border: 1px solid rgba(74, 222, 128, .25);
+      color: #4ade80;
+    }
+
+    .feedback.error {
+      background: rgba(248, 113, 113, .1);
+      border: 1px solid rgba(248, 113, 113, .2);
+      color: #fca5a5;
+    }
+
+    .hint-btn {
+      background: none;
+      border: none;
+      color: #93c5fd;
+      cursor: pointer;
+      font-size: .85rem;
+      margin-top: .5rem;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .hint-btn:hover { color: #bfdbfe; }
+
+    .hint-text {
+      margin-top: .4rem;
+      font-size: .85rem;
+      color: #c4b5fd;
+      display: none;
+    }
+
+    .hint-text.show { display: block; }
+
+    .diff-correct { color: #4ade80; font-weight: 600; }
+    .diff-wrong { color: #f87171; text-decoration: line-through; font-weight: 600; }
+
+    .btn-reset {
+      display: block;
+      margin: 2rem auto 0;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      color: #ccc;
+      padding: .7rem 2rem;
+      border-radius: 10px;
+      font-size: .95rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .btn-reset:hover { background: rgba(255,255,255,.14); }
+
+    .translation {
+      margin-top: .5rem;
+      padding: .5rem .75rem;
+      background: rgba(147, 197, 253, .08);
+      border: 1px solid rgba(147, 197, 253, .18);
+      border-radius: 8px;
+      color: #93c5fd;
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    .btn-next {
+      display: none;
+      margin: 1.5rem auto 0;
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #1a1a2e;
+      border: none;
+      border-radius: 10px;
+      padding: .8rem 2.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+
+    .btn-next.show { display: block; }
+    .btn-next:hover { opacity: .9; transform: translateY(-1px); }
+
+    .round-summary {
+      text-align: center;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      background: rgba(255,255,255,.05);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.1);
+      display: none;
+    }
+
+    .round-summary.show { display: block; }
+
+    .round-summary h2 {
+      font-size: 1.3rem;
+      background: linear-gradient(90deg, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: .6rem;
+    }
+
+    .round-summary p {
+      color: #ccc;
+      font-size: .95rem;
+    }
+
+    .round-summary .stat-highlight {
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    @media (max-width: 500px) {
+      body { padding: 1.2rem .6rem; }
+      header h1 { font-size: 1.5rem; }
+      .card { padding: 1.1rem; }
+      .input-row { flex-direction: column; }
+      .btn-submit { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Deutsch Satzübung</h1>
+      <p>每次隨機五題，將碎片組成正確的德文句子</p>
+    </header>
+
+    <div class="score-bar">
+      <span class="correct-count" id="correctCount">正確：0</span>
+      <span class="wrong-count" id="wrongCount">錯誤：0</span>
+      <span class="total-count" id="totalCount">完成：0 / 5</span>
+    </div>
+
+    <div id="questions"></div>
+
+    <div class="round-summary" id="roundSummary">
+      <h2 id="summaryTitle">本輪完成！</h2>
+      <p id="summaryText"></p>
+    </div>
+
+    <button class="btn-next" id="nextBtn">下一組五題</button>
+    <button class="btn-reset" id="resetBtn">重新開始（歸零）</button>
+  </div>
+
+<script>
+const DATA = [
+  {
+    fragments: ["Am Sonntag", "wir", "lange", "können", "schlafen", "."],
+    answer: "Am Sonntag können wir lange schlafen."
+  },
+  {
+    fragments: ["eine Freundin", "Meine Tochter", "besuchen", "will", "."],
+    answer: "Meine Tochter will eine Freundin besuchen."
+  },
+  {
+    fragments: ["sehen", "Mein Mann", "möchte", "Fußball", "."],
+    answer: "Mein Mann möchte Fußball sehen."
+  },
+  {
+    fragments: ["ich", "muss", "kochen", "leider auch", "Am Sonntag", "."],
+    answer: "Am Sonntag muss ich leider auch kochen."
+  },
+  {
+    fragments: ["Am Nachmittag", "wir", "spazieren gehen", "zusammen", "möchten", "."],
+    answer: "Am Nachmittag möchten wir zusammen spazieren gehen."
+  },
+  {
+    fragments: ["ich", "möchte", "meine Aufenthaltserlaubnis", "verlängern", "."],
+    answer: "Ich möchte meine Aufenthaltserlaubnis verlängern."
+  },
+  {
+    fragments: ["Sie", "müssen", "in den dritten Stock", "in Zimmer 325", "gehen", "."],
+    answer: "Sie müssen in den dritten Stock in Zimmer 325 gehen."
+  },
+  {
+    fragments: ["Kann", "ich", "meinen Hund", "mitnehmen", "?"],
+    answer: "Kann ich meinen Hund mitnehmen?"
+  },
+  {
+    fragments: ["Hunde", "dürfen", "nicht ins Haus", "gehen", "."],
+    answer: "Hunde dürfen nicht ins Haus gehen."
+  },
+  {
+    fragments: ["wo", "soll", "der Hund", "bleiben", "?"],
+    answer: "Wo soll der Hund bleiben?"
+  },
+  {
+    fragments: ["ich", "muss", "immer", "um 6 Uhr", "aufstehen", "."],
+    answer: "Ich muss immer um 6 Uhr aufstehen.",
+    altAnswers: ["Um 6 Uhr muss ich immer aufstehen."],
+    verbHint: "aufstehen + müssen"
+  },
+  {
+    fragments: ["ich", "fange", "mit der Arbeit", "um 7:30 Uhr", "an", "."],
+    answer: "Ich fange um 7:30 Uhr mit der Arbeit an.",
+    altAnswers: ["Um 7:30 Uhr fange ich mit der Arbeit an."],
+    verbHint: "anfangen"
+  },
+  {
+    fragments: ["ich", "kaufe", "am Montag", "nach der Arbeit", "ein", "."],
+    answer: "Ich kaufe am Montag nach der Arbeit ein.",
+    altAnswers: ["Am Montag kaufe ich nach der Arbeit ein."],
+    verbHint: "einkaufen"
+  },
+  {
+    fragments: ["ich", "komme", "am Abend", "um 19 Uhr", "nach Hause", "zurück", "."],
+    answer: "Ich komme am Abend um 19 Uhr nach Hause zurück.",
+    altAnswers: ["Am Abend komme ich um 19 Uhr nach Hause zurück."],
+    verbHint: "zurückkommen"
+  },
+  {
+    fragments: ["ich", "möchte", "heute", "ausgehen", "."],
+    answer: "Ich möchte heute ausgehen.",
+    altAnswers: ["Heute möchte ich ausgehen."],
+    verbHint: "ausgehen + möchten"
+  },
+  {
+    fragments: ["Möchtest", "du", "mitkommen", "?"],
+    answer: "Möchtest du mitkommen?",
+    verbHint: "mitkommen + möchten"
+  },
+  {
+    fragments: ["Um 8 Uhr", "schalte", "ich", "den Computer", "an", "."],
+    answer: "Um 8 Uhr schalte ich den Computer an.",
+    verbHint: "anschalten"
+  },
+  {
+    fragments: ["Um 9 Uhr", "rufe", "ich", "Kunden und Kundinnen", "an", "und", "muss", "E-Mails", "schreiben", "."],
+    answer: "Um 9 Uhr rufe ich Kunden und Kundinnen an und muss E-Mails schreiben.",
+    altAnswers: ["Um 9 Uhr rufe ich Kunden an und muss E-Mails schreiben."],
+    verbHint: "anrufen + schreiben müssen"
+  },
+  {
+    fragments: ["Um 10 Uhr", "kommt", "eine Lieferung", "an", "."],
+    answer: "Um 10 Uhr kommt eine Lieferung an.",
+    verbHint: "ankommen"
+  },
+  {
+    fragments: ["Ich", "arbeite", "schnell", ",", "weil", "das Meeting", "um 11 Uhr", "anfängt", "."],
+    answer: "Ich arbeite schnell, weil das Meeting um 11 Uhr anfängt.",
+    verbHint: "arbeiten + anfangen"
+  },
+  {
+    fragments: ["Nach dem Meeting", "können", "wir", "mit der Pause", "anfangen", "."],
+    answer: "Nach dem Meeting können wir mit der Pause anfangen.",
+    verbHint: "anfangen können"
+  },
+  {
+    fragments: ["Pünktlich um 13 Uhr", "muss", "ich", "aus der Pause", "zurückkommen", "."],
+    answer: "Pünktlich um 13 Uhr muss ich aus der Pause zurückkommen.",
+    verbHint: "zurückkommen müssen"
+  },
+  {
+    fragments: ["Um 17 Uhr", "schalte", "ich", "den Computer", "aus", "und", "räume", "den Schreibtisch", "auf", "."],
+    answer: "Um 17 Uhr schalte ich den Computer aus und räume den Schreibtisch auf.",
+    verbHint: "ausschalten + aufräumen"
+  },
+  {
+    fragments: ["Ich", "gehe", "schnell", "nach Hause", "zurück", ",", "weil", "ich", "heute", "ausgehen", "möchte", "."],
+    answer: "Ich gehe schnell nach Hause zurück, weil ich heute ausgehen möchte.",
+    verbHint: "zurückgehen + ausgehen möchten"
+  },
+  {
+    fragments: ["Gehe", "ich", "alleine", "ins Kino", "oder", "kommen", "Sie", "mit", "?"],
+    answer: "Gehe ich alleine ins Kino oder kommen Sie mit?",
+    verbHint: "gehen + mitkommen"
+  },
+  {
+    fragments: ["wie", "heißen", "Sie", "?"],
+    answer: "Wie heißen Sie?"
+  },
+  {
+    fragments: ["wie", "ist", "Ihr Vorname", "?"],
+    answer: "Wie ist Ihr Vorname?"
+  },
+  {
+    fragments: ["woher", "kommen", "Sie", "?"],
+    answer: "Woher kommen Sie?"
+  },
+  {
+    fragments: ["wo", "wohnen", "Sie", "?"],
+    answer: "Wo wohnen Sie?"
+  },
+  {
+    fragments: ["was", "sind", "Sie", "von Beruf", "?"],
+    answer: "Was sind Sie von Beruf?"
+  },
+  {
+    fragments: ["er", "heißt", "Peter Schmidt", "."],
+    answer: "Er heißt Peter Schmidt."
+  },
+  {
+    fragments: ["Peter", "und", "seine Frau Anne", "wohnen", "jetzt", "in Heidelberg", "."],
+    answer: "Peter und seine Frau Anne wohnen jetzt in Heidelberg."
+  },
+  {
+    fragments: ["Ihre Adresse", "ist", "Auerstraße 12", "."],
+    answer: "Ihre Adresse ist Auerstraße 12."
+  },
+  {
+    fragments: ["Anne", "ist", "Ingenieurin", "von Beruf", "."],
+    answer: "Anne ist Ingenieurin von Beruf."
+  },
+  {
+    fragments: ["Ihr Mann", "arbeitet", "im Krankenhaus", "."],
+    answer: "Ihr Mann arbeitet im Krankenhaus."
+  },
+  {
+    fragments: ["woher", "Luis und Paloma", "kommen", "?"],
+    answer: "Woher kommen Luis und Paloma?"
+  },
+  {
+    fragments: ["von Beruf", "was", "sie", "sind", "?"],
+    answer: "Was sind sie von Beruf?"
+  },
+  {
+    fragments: ["wohnen", "wo", "jetzt", "sie", "?"],
+    answer: "Wo wohnen sie jetzt?"
+  },
+  {
+    fragments: ["sie", "machen", "was", "heute Abend", "?"],
+    answer: "Was machen sie heute Abend?"
+  },
+  {
+    fragments: ["müde", "heute", "Sie", "sind", "?"],
+    answer: "Sind Sie heute müde?"
+  },
+  {
+    fragments: ["Sie", "wie lange", "schlafen", "immer", "?"],
+    answer: "Wie lange schlafen Sie immer?"
+  },
+  {
+    fragments: ["trinken", "was", "am Morgen", "Sie", "?"],
+    answer: "Was trinken Sie am Morgen?"
+  },
+  {
+    fragments: ["am Morgen", "Sie", "trinken", "Kaffee", "?"],
+    answer: "Trinken Sie am Morgen Kaffee?"
+  },
+  {
+    fragments: ["Sie", "kommen", "!"],
+    answer: "Kommen Sie!"
+  },
+  {
+    fragments: ["die Geschichte", "hören", "Sie", "!"],
+    answer: "Hören Sie die Geschichte!"
+  },
+  {
+    fragments: ["jetzt", "Sie", "sagen", "nichts", "!"],
+    answer: "Sagen Sie jetzt nichts!"
+  },
+  {
+    fragments: ["Sie", "Ihren Freunden", "die Geschichte", "erzählen", "!"],
+    answer: "Erzählen Sie Ihren Freunden die Geschichte!"
+  },
+  {
+    fragments: ["schon drei Jahre", "ich", "wohne", "in Heidelberg", "."],
+    answer: "Ich wohne schon drei Jahre in Heidelberg.",
+    altAnswers: ["Schon drei Jahre wohne ich in Heidelberg."]
+  },
+  {
+    fragments: ["arbeite", "seit zwei Jahren", "in Frankfurt", "ich", "."],
+    answer: "Ich arbeite seit zwei Jahren in Frankfurt.",
+    altAnswers: ["Seit zwei Jahren arbeite ich in Frankfurt."]
+  },
+  {
+    fragments: ["von Heidelberg nach Frankfurt", "ich", "fahre", "jeden Montag", "."],
+    answer: "Ich fahre jeden Montag von Heidelberg nach Frankfurt.",
+    altAnswers: ["Jeden Montag fahre ich von Heidelberg nach Frankfurt."]
+  },
+  {
+    fragments: ["ich", "bei meiner Cousine", "von Montag bis Freitag", "wohne", "."],
+    answer: "Ich wohne von Montag bis Freitag bei meiner Cousine.",
+    altAnswers: ["Von Montag bis Freitag wohne ich bei meiner Cousine."]
+  },
+  {
+    fragments: ["im Büro", "ich", "von 9 bis 18 Uhr", "arbeite", "."],
+    answer: "Ich arbeite von 9 bis 18 Uhr im Büro.",
+    altAnswers: ["Von 9 bis 18 Uhr arbeite ich im Büro."]
+  },
+  {
+    fragments: ["in der Mittagspause", "in der Kantine", "ich", "esse", "."],
+    answer: "Ich esse in der Mittagspause in der Kantine.",
+    altAnswers: ["In der Mittagspause esse ich in der Kantine."]
+  },
+  {
+    fragments: ["gehe", "ins Fitness-Studio", "zwei Mal pro Woche", "ich", "."],
+    answer: "Ich gehe zwei Mal pro Woche ins Fitness-Studio.",
+    altAnswers: ["Zwei Mal pro Woche gehe ich ins Fitness-Studio."]
+  },
+  {
+    fragments: ["nach Heidelberg", "freitags um 17 Uhr", "ich", "fahre", "."],
+    answer: "Ich fahre freitags um 17 Uhr nach Heidelberg.",
+    altAnswers: ["Freitags um 17 Uhr fahre ich nach Heidelberg."]
+  },
+  {
+    fragments: ["bin", "ich", "zu Hause", "von Freitagabend bis Montagmorgen", "."],
+    answer: "Ich bin von Freitagabend bis Montagmorgen zu Hause.",
+    altAnswers: ["Von Freitagabend bis Montagmorgen bin ich zu Hause."]
+  },
+  {
+    fragments: ["Sie", "eine Deutschlandreise", "wollen", "machen", "."],
+    answer: "Sie wollen eine Deutschlandreise machen."
+  },
+  {
+    fragments: ["Tickets kaufen", "und", "Hotels buchen", "Sie", "müssen", "."],
+    answer: "Sie müssen Tickets kaufen und Hotels buchen.",
+    altAnswers: ["Sie müssen Hotels buchen und Tickets kaufen."]
+  },
+  {
+    fragments: ["sollen", "fahren", "sie", "Wann", "?"],
+    answer: "Wann sollen sie fahren?"
+  },
+  {
+    fragments: ["Sie", "fahren", "im Sommer", "wollen", "."],
+    answer: "Sie wollen im Sommer fahren."
+  },
+  {
+    fragments: ["Sie", "bleiben", "können", "nur zwei Wochen in Deutschland", "."],
+    answer: "Sie können nur zwei Wochen in Deutschland bleiben."
+  },
+  {
+    fragments: ["Dann", "schon wieder nach Hause", "fahren", "müssen", "sie", "."],
+    answer: "Dann müssen sie schon wieder nach Hause fahren."
+  },
+  {
+    fragments: ["wir", "ziehen", "nach Hamburg", "um", "."],
+    answer: "Wir ziehen nach Hamburg um.",
+    verbHint: "umziehen"
+  },
+  {
+    fragments: ["die Wohnung", "jetzt", "wir", "räumen", "auf", "."],
+    answer: "Jetzt räumen wir die Wohnung auf.",
+    verbHint: "aufräumen"
+  },
+  {
+    fragments: ["wir", "werfen", "viele Sachen", "weg", "."],
+    answer: "Wir werfen viele Sachen weg.",
+    verbHint: "wegwerfen"
+  },
+  {
+    fragments: ["wer", "packt", "das Geschirr und die Gläser", "ein", "?"],
+    answer: "Wer packt das Geschirr und die Gläser ein?",
+    verbHint: "einpacken"
+  },
+  {
+    fragments: ["Nächste Woche am Montag", "wir", "ziehen", "aus", "."],
+    answer: "Nächste Woche am Montag ziehen wir aus.",
+    altAnswers: ["Nächste Woche ziehen wir aus."],
+    verbHint: "ausziehen"
+  },
+  {
+    fragments: ["in die neue Wohnung", "Am Dienstag", "wir", "ziehen", "ein", "."],
+    answer: "Am Dienstag ziehen wir in die neue Wohnung ein.",
+    verbHint: "einziehen"
+  },
+  {
+    fragments: ["Das Wetter", "heute", "wunderbar", "ist", "."],
+    answer: "Das Wetter ist heute wunderbar."
+  },
+  {
+    fragments: ["der Himmel", "auch blau", "war", "Gestern", "."],
+    answer: "Gestern war der Himmel auch blau."
+  },
+  {
+    fragments: ["Hoffentlich", "schön", "morgen auch genauso", "es", "ist", "."],
+    answer: "Hoffentlich ist es morgen auch genauso schön."
+  },
+  {
+    fragments: ["Am Samstagmorgen", "sie", "in der Stadt", "einkaufen", "gehen", "."],
+    answer: "Am Samstagmorgen gehen sie in der Stadt einkaufen."
+  },
+  {
+    fragments: ["spazieren", "sie", "gehen", "im Park", "Nachmittags", "."],
+    answer: "Nachmittags gehen sie im Park spazieren."
+  },
+  {
+    fragments: ["Die Kinder", "schwimmen", "mit ihren Freunden", "gehen", "."],
+    answer: "Die Kinder gehen mit ihren Freunden schwimmen."
+  },
+  {
+    fragments: ["Pamela und Chris", "schon gut", "Deutsch", "sprechen", "."],
+    answer: "Pamela und Chris sprechen schon gut Deutsch."
+  },
+  {
+    fragments: ["Chris", "Gitarre", "am Abend gerne", "spielt", "."],
+    answer: "Chris spielt am Abend gerne Gitarre."
+  },
+  {
+    fragments: ["oft stundenlang", "Musik", "Er", "hört", "."],
+    answer: "Er hört oft stundenlang Musik."
+  },
+  {
+    fragments: ["Pamela", "Spanisch", "lernen", "möchte", "im Urlaub", "."],
+    answer: "Pamela möchte im Urlaub Spanisch lernen."
+  },
+  {
+    fragments: ["Pamela", "fährt", "auch bei Regen", "gerne", "Fahrrad", "."],
+    answer: "Pamela fährt auch bei Regen gerne Fahrrad."
+  },
+  {
+    fragments: ["Urlaub", "Im Sommer", "Chris", "machen", "möchte", "."],
+    answer: "Im Sommer möchte Chris Urlaub machen."
+  },
+  {
+    fragments: ["Am letzten Wochenende", "nach Berlin", "Anna", "ist", "gefahren", "."],
+    answer: "Am letzten Wochenende ist Anna nach Berlin gefahren."
+  },
+  {
+    fragments: ["Sie", "ihre Freunde", "besucht", "hat", "."],
+    answer: "Sie hat ihre Freunde besucht."
+  },
+  {
+    fragments: ["gegangen", "sie", "sind", "ins Theater", "Am Samstagabend", "."],
+    answer: "Am Samstagabend sind sie ins Theater gegangen."
+  },
+  {
+    fragments: ["Am Sonntag", "in einem Restaurant am Wannsee", "sie", "gegessen", "haben", "."],
+    answer: "Am Sonntag haben sie in einem Restaurant am Wannsee gegessen."
+  },
+  {
+    fragments: ["erst sehr spät nach Hause", "Sie", "gekommen", "ist", "."],
+    answer: "Sie ist erst sehr spät nach Hause gekommen."
+  },
+  {
+    fragments: ["Am nächsten Morgen", "hat", "sie", "lange", "geschlafen", "."],
+    answer: "Am nächsten Morgen hat sie lange geschlafen."
+  },
+  {
+    fragments: ["gestern", "ich", "habe", "geschenkt", "ein Buch", "meinem Bruder", "."],
+    answer: "Ich habe meinem Bruder gestern ein Buch geschenkt.",
+    altAnswers: [
+      "Gestern habe ich meinem Bruder ein Buch geschenkt.",
+      "Meinem Bruder habe ich gestern ein Buch geschenkt.",
+      "Ein Buch habe ich gestern meinem Bruder geschenkt."
+    ]
+  },
+  {
+    fragments: ["auf dem Marktplatz", "hat", "gestern Abend", "eine Band", "gespielt", "."],
+    answer: "Auf dem Marktplatz hat gestern Abend eine Band gespielt.",
+    altAnswers: [
+      "Gestern Abend hat eine Band auf dem Marktplatz gespielt.",
+      "Eine Band hat gestern Abend auf dem Marktplatz gespielt."
+    ]
+  },
+  {
+    fragments: ["im Park", "wollen", "Schüler", "ein Konzert geben", "heute", "."],
+    answer: "Im Park wollen Schüler heute ein Konzert geben.",
+    altAnswers: [
+      "Schüler wollen heute im Park ein Konzert geben.",
+      "Heute wollen Schüler im Park ein Konzert geben."
+    ]
+  },
+  {
+    fragments: ["ich", "bringe", "zum Geburtstag", "heute", "einen Kuchen", "mit", "."],
+    answer: "Ich bringe heute zum Geburtstag einen Kuchen mit.",
+    altAnswers: [
+      "Zum Geburtstag bringe ich heute einen Kuchen mit.",
+      "Heute bringe ich einen Kuchen zum Geburtstag mit.",
+      "Einen Kuchen bringe ich heute zum Geburtstag mit."
+    ],
+    verbHint: "mitbringen"
+  }
+];
+
+const TRANSLATIONS = [
+  "星期天我們可以睡到很晚。",
+  "我的女兒想去拜訪一位女性朋友。",
+  "我的丈夫想看足球。",
+  "很遺憾星期天我也必須做飯。",
+  "下午我們想一起去散步。",
+  "我想延長我的居留許可。",
+  "您必須到三樓 325 號房間。",
+  "我可以帶我的狗嗎？",
+  "狗不可以進入房子裡。",
+  "狗應該待在哪裡？",
+  "我必須總是六點起床。",
+  "我七點半開始工作。",
+  "我星期一下班後去購物。",
+  "我晚上七點回到家。",
+  "我今天想出門。",
+  "你想一起來嗎？",
+  "八點鐘我打開電腦。",
+  "九點鐘我打電話給客戶，還必須寫電子郵件。",
+  "十點鐘有一批貨到達。",
+  "我快速工作，因為會議十一點開始。",
+  "會議結束後我們可以開始休息。",
+  "下午一點我必須準時結束休息回來。",
+  "下午五點我關掉電腦並整理辦公桌。",
+  "我趕快回家，因為我今天想出門。",
+  "我一個人去看電影，還是您一起來？",
+  "您叫什麼名字？",
+  "您的名字是什麼？",
+  "您從哪裡來？",
+  "您住在哪裡？",
+  "您的職業是什麼？",
+  "他叫 Peter Schmidt。",
+  "Peter 和他的太太 Anne 現在住在海德堡。",
+  "他們的地址是 Auerstraße 12 號。",
+  "Anne 的職業是工程師。",
+  "她的丈夫在醫院工作。",
+  "Luis 和 Paloma 從哪裡來？",
+  "他們的職業是什麼？",
+  "他們現在住在哪裡？",
+  "他們今天晚上做什麼？",
+  "您今天累嗎？",
+  "您總是睡多久？",
+  "您早上喝什麼？",
+  "您早上喝咖啡嗎？",
+  "您來！",
+  "請聽這個故事！",
+  "您現在什麼都不要說！",
+  "請把這個故事講給您的朋友們聽！",
+  "我已經在海德堡住了三年。",
+  "我在法蘭克福工作兩年了。",
+  "我每個星期一從海德堡開車到法蘭克福。",
+  "我週一到週五住在我表姐那裡。",
+  "我在辦公室從九點工作到下午六點。",
+  "我午休時在食堂吃飯。",
+  "我一週去兩次健身房。",
+  "我每週五下午五點開車回海德堡。",
+  "我從週五晚上到週一早上都在家。",
+  "他們想去德國旅行。",
+  "他們必須買票和訂飯店。",
+  "他們應該什麼時候出發？",
+  "他們想在夏天出發。",
+  "他們只能在德國待兩週。",
+  "然後他們就必須回家了。",
+  "我們搬到漢堡。",
+  "現在我們整理公寓。",
+  "我們丟掉很多東西。",
+  "誰來打包餐具和玻璃杯？",
+  "下週一我們搬出去。",
+  "週二我們搬進新公寓。",
+  "今天天氣很好。",
+  "昨天天空也是藍的。",
+  "希望明天天氣也一樣好。",
+  "週六早上他們去城裡購物。",
+  "下午他們去公園散步。",
+  "孩子們和朋友去游泳。",
+  "Pamela 和 Chris 已經說得一口好德語。",
+  "Chris 晚上喜歡彈吉他。",
+  "他經常聽好幾個小時的音樂。",
+  "Pamela 想在假期學西班牙語。",
+  "Pamela 即使下雨也喜歡騎腳踏車。",
+  "Chris 想在夏天度假。",
+  "上個週末 Anna 去了柏林。",
+  "她拜訪了她的朋友們。",
+  "週六晚上他們去了劇院。",
+  "週日他們在萬湖邊的一家餐廳吃了飯。",
+  "她很晚才回到家。",
+  "第二天早上她睡了很久。",
+  "我昨天送了我弟弟一本書。",
+  "昨天晚上有一個樂團在市場廣場上演奏。",
+  "今天學生們想在公園舉辦一場音樂會。",
+  "我今天帶一個蛋糕去參加生日派對。"
+];
+
+const QUIZ_SIZE = 5;
+let currentQuestions = [];
+let stats = { correct: 0, wrong: 0, roundCorrect: 0, roundWrong: 0, roundDone: 0 };
+let solved = new Set();
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function normalize(str) {
+  return str.replace(/\s+/g, ' ').replace(/\s*,\s*/g, ', ').replace(/\s*([.?!])\s*$/, '$1').trim();
+}
+
+function getAllAnswers(dataIdx) {
+  const d = DATA[dataIdx];
+  return [d.answer, ...(d.altAnswers || [])];
+}
+
+function findClosestAnswer(userAnswer, dataIdx) {
+  const answers = getAllAnswers(dataIdx);
+  if (answers.length === 1) return answers[0];
+
+  const uWords = normalize(userAnswer).replace(/[.?!]$/, '').trim().toLowerCase().split(/\s+/);
+  let best = answers[0], bestScore = -1;
+
+  for (const ans of answers) {
+    const aWords = normalize(ans).replace(/[.?!]$/, '').trim().toLowerCase().split(/\s+/);
+    let score = 0;
+    for (let i = 0; i < Math.min(uWords.length, aWords.length); i++) {
+      if (uWords[i] === aWords[i]) score++;
+    }
+    if (score > bestScore) { bestScore = score; best = ans; }
+  }
+  return best;
+}
+
+function buildDiff(userAnswer, correctAnswer) {
+  const punct = correctAnswer.trim().slice(-1);
+  const userWords = normalize(userAnswer).replace(/[.?!]$/, '').trim().split(/\s+/);
+  const correctWords = normalize(correctAnswer).replace(/[.?!]$/, '').trim().split(/\s+/);
+
+  let html = '<div style="margin-top:.35rem"><strong>你的回答：</strong> ';
+  const maxLen = Math.max(userWords.length, correctWords.length);
+
+  for (let i = 0; i < maxLen; i++) {
+    const uw = userWords[i] || '';
+    const cw = correctWords[i] || '';
+    if (uw.toLowerCase() === cw.toLowerCase()) {
+      html += `<span>${uw}</span> `;
+    } else if (uw) {
+      html += `<span class="diff-wrong">${uw}</span> `;
+    }
+  }
+  html += `${punct}</div>`;
+  return html;
+}
+
+function getHints(userAnswer, correctAnswer) {
+  const hints = [];
+  const uNorm = normalize(userAnswer);
+  const cNorm = normalize(correctAnswer);
+  const uWords = uNorm.replace(/[.?!]$/, '').trim().split(/\s+/);
+  const cWords = cNorm.replace(/[.?!]$/, '').trim().split(/\s+/);
+
+  if (uWords[0] && cWords[0] && uWords[0].toLowerCase() !== cWords[0].toLowerCase()) {
+    hints.push(`句子的第一個字應為「<strong>${cWords[0]}</strong>」`);
+  }
+
+  const verbPatterns = ['können', 'will', 'möchte', 'muss', 'möchten', 'müssen', 'kann',
+    'dürfen', 'soll', 'möchtest', 'fange', 'kaufe', 'komme', 'schalte', 'rufe',
+    'kommt', 'arbeite', 'räume', 'gehe', 'kommen', 'heißen', 'heißt', 'ist',
+    'wohnen', 'sind', 'arbeitet', 'machen', 'schlafen', 'trinken',
+    'hören', 'sagen', 'erzählen', 'wohne', 'fahre', 'esse', 'bin',
+    'wollen', 'sprechen', 'spielt', 'hört', 'fährt', 'war', 'hat', 'haben',
+    'ziehen', 'werfen', 'packt', 'bringe', 'gehen', 'räumen'];
+  const cVerb = cWords.find(w => verbPatterns.includes(w.toLowerCase()));
+  const cVerbIdx = cWords.indexOf(cVerb);
+  if (cVerb && cVerbIdx === 1) {
+    const uVerbIdx = uWords.findIndex(w => w.toLowerCase() === cVerb.toLowerCase());
+    if (uVerbIdx !== 1) {
+      hints.push(`動詞「<strong>${cVerb}</strong>」應放在第二位`);
+    }
+  }
+
+  const separablePrefixes = ['auf', 'an', 'ein', 'zurück', 'aus', 'mit', 'um', 'weg'];
+  const cLastWord = cWords[cWords.length - 1];
+  if (separablePrefixes.includes(cLastWord?.toLowerCase())) {
+    const uLastWord = uWords[uWords.length - 1];
+    if (uLastWord?.toLowerCase() !== cLastWord.toLowerCase()) {
+      hints.push(`可分離前綴「<strong>${cLastWord}</strong>」應放在句末`);
+    }
+  }
+
+  const weilIdx = cWords.findIndex(w => w.toLowerCase() === 'weil');
+  if (weilIdx >= 0) {
+    const uWeilIdx = uWords.findIndex(w => w.toLowerCase() === 'weil');
+    if (uWeilIdx < 0) {
+      hints.push('句子中需要用「<strong>weil</strong>」連接子句');
+    } else {
+      hints.push('注意：<strong>weil</strong> 子句中，動詞放在子句末尾');
+    }
+  }
+
+  if (uWords.length !== cWords.length) {
+    hints.push(`正確答案共有 <strong>${cWords.length}</strong> 個詞（不含標點）`);
+  }
+
+  if (hints.length === 0) {
+    hints.push('順序不太對，注意德文主句中動詞要放在第二位');
+  }
+
+  return hints;
+}
+
+function pickRandomQuestions() {
+  const indices = Array.from({length: DATA.length}, (_, i) => i);
+  currentQuestions = shuffleArray(indices).slice(0, QUIZ_SIZE);
+}
+
+function render() {
+  const container = document.getElementById('questions');
+  container.innerHTML = '';
+  document.getElementById('roundSummary').className = 'round-summary';
+  document.getElementById('nextBtn').className = 'btn-next';
+
+  currentQuestions.forEach((dataIdx, displayIdx) => {
+    const q = DATA[dataIdx];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = `card-${displayIdx}`;
+
+    const shuffled = shuffleArray(q.fragments);
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-number">${displayIdx + 1}</div>
+        <div class="card-label">請排列成正確的句子${q.verbHint ? `<span class="verb-hint">${q.verbHint}</span>` : ''}</div>
+      </div>
+      <div class="word-chips" id="chips-${displayIdx}">
+        ${shuffled.map(f => `<span class="chip" data-q="${displayIdx}" data-text="${f}" onclick="chipClick(this)">${f}</span>`).join('')}
+      </div>
+      <div class="input-row">
+        <input type="text" id="input-${displayIdx}" placeholder="在此輸入完整句子…"
+               onkeydown="if(event.key==='Enter')submitAnswer(${displayIdx})" autocomplete="off" spellcheck="false">
+        <button class="btn-submit" id="btn-${displayIdx}" onclick="submitAnswer(${displayIdx})">提交</button>
+      </div>
+      <div class="feedback" id="feedback-${displayIdx}"></div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function chipClick(el) {
+  const displayIdx = el.dataset.q;
+  const text = el.dataset.text;
+  const input = document.getElementById(`input-${displayIdx}`);
+  if (input.disabled) return;
+
+  const current = input.value.trim();
+  if (['.', '?', '!', ','].includes(text)) {
+    input.value = current + text;
+  } else {
+    input.value = current ? current + ' ' + text : text;
+  }
+
+  el.classList.add('used');
+  input.focus();
+}
+
+function submitAnswer(displayIdx) {
+  if (solved.has(displayIdx)) return;
+  const dataIdx = currentQuestions[displayIdx];
+
+  const input = document.getElementById(`input-${displayIdx}`);
+  const feedback = document.getElementById(`feedback-${displayIdx}`);
+  const card = document.getElementById(`card-${displayIdx}`);
+  const btn = document.getElementById(`btn-${displayIdx}`);
+  const userAnswer = input.value.trim();
+
+  if (!userAnswer) {
+    feedback.className = 'feedback show error';
+    feedback.innerHTML = '請先輸入你的答案';
+    return;
+  }
+
+  const user = normalize(userAnswer);
+  const isCorrect = getAllAnswers(dataIdx).some(a => user.toLowerCase() === normalize(a).toLowerCase());
+
+  if (isCorrect) {
+    solved.add(displayIdx);
+    stats.correct++;
+    stats.roundCorrect++;
+    stats.roundDone++;
+    card.className = 'card correct';
+    feedback.className = 'feedback show success';
+
+    const others = getAllAnswers(dataIdx).filter(a => normalize(a).toLowerCase() !== user.toLowerCase());
+    const altHtml = others.length
+      ? `<div style="margin-top:.4rem;color:#86efac;font-size:.85rem">其他正確寫法：${others.map(a => `<strong>${a}</strong>`).join('、')}</div>`
+      : '';
+    const translation = TRANSLATIONS[dataIdx] || '';
+    const transHtml = translation
+      ? `<div class="translation">中文：${translation}</div>`
+      : '';
+    feedback.innerHTML = `<div>正確！做得好！</div>${altHtml}${transHtml}`;
+    input.disabled = true;
+    btn.disabled = true;
+
+    if (stats.roundDone === QUIZ_SIZE) {
+      showRoundSummary();
+    }
+  } else {
+    stats.wrong++;
+    stats.roundWrong++;
+    card.className = 'card wrong';
+    feedback.className = 'feedback show error';
+
+    const closest = findClosestAnswer(userAnswer, dataIdx);
+    const diffHtml = buildDiff(userAnswer, closest);
+    const hints = getHints(userAnswer, closest);
+
+    feedback.innerHTML = `
+      <div>答案不正確，再試一次！</div>
+      ${diffHtml}
+      <button class="hint-btn" onclick="toggleHint(${displayIdx})">顯示提示</button>
+      <div class="hint-text" id="hint-${displayIdx}">
+        ${hints.map(h => `<div>💡 ${h}</div>`).join('')}
+      </div>
+    `;
+
+    setTimeout(() => { card.className = 'card'; }, 1500);
+  }
+
+  updateScore();
+}
+
+function showRoundSummary() {
+  const summary = document.getElementById('roundSummary');
+  const title = document.getElementById('summaryTitle');
+  const text = document.getElementById('summaryText');
+
+  const perfect = stats.roundWrong === 0;
+  title.textContent = perfect ? '滿分通過！太棒了！' : '本輪完成！';
+  text.innerHTML = `本輪答對 <span class="stat-highlight">${stats.roundCorrect}</span> 題` +
+    (stats.roundWrong > 0 ? `，錯誤嘗試 <span style="color:#f87171;font-weight:600">${stats.roundWrong}</span> 次` : '') +
+    `<br>累計正確：${stats.correct}　累計錯誤：${stats.wrong}`;
+
+  summary.className = 'round-summary show';
+  document.getElementById('nextBtn').className = 'btn-next show';
+}
+
+function nextRound() {
+  stats.roundCorrect = 0;
+  stats.roundWrong = 0;
+  stats.roundDone = 0;
+  solved.clear();
+  pickRandomQuestions();
+  updateScore();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleHint(displayIdx) {
+  const hint = document.getElementById(`hint-${displayIdx}`);
+  hint.classList.toggle('show');
+}
+
+function updateScore() {
+  document.getElementById('correctCount').textContent = `正確：${stats.roundCorrect}`;
+  document.getElementById('wrongCount').textContent = `錯誤：${stats.roundWrong}`;
+  document.getElementById('totalCount').textContent = `完成：${stats.roundDone} / ${QUIZ_SIZE}`;
+}
+
+document.getElementById('nextBtn').addEventListener('click', nextRound);
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  stats = { correct: 0, wrong: 0, roundCorrect: 0, roundWrong: 0, roundDone: 0 };
+  solved.clear();
+  pickRandomQuestions();
+  updateScore();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+pickRandomQuestions();
+render();
+</script>
+</body>
+</html>
